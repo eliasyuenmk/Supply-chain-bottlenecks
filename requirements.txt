@@ -1,0 +1,6 @@
+pandas
+sqlalchemy
+psycopg2-binary
+os
+glob
+python-dotenv
