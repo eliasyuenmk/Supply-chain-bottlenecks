@@ -1,16 +1,17 @@
 # End-to-End E-Commerce Supply Chain & Customer Sentiment Dashboard
 
 ## Key Business Insights Uncovered
-- The Delivery Cliff: Analyzing Page 3's Impact Curve reveals that customer review scores drop exponentially once a shipping delay exceeds 2.1 days past promise, dropping the average feedback rating from $4.3$ to $1.8$ stars.
-- Seller-Driven Bottlenecks: Page 2 isolates that sellers based in specific geographic regions take an average of $4.8$ days simply to process and hand over packages to local carriers—proving the primary bottleneck lies in warehousing dispatch rather than regional courier transit.
-- Volumetric Capacity Risk: The scatter plot mathematically isolates heavy categories (e.g., Furniture, Large Appliances) as the main drivers of carrier delay, suggesting that offering localized, specialized shipping partners for oversized products could mitigate systemic delivery overruns.
+- <b>The Critical Late Order Penalty:</b> The data mathematically proves that late deliveries inflict an immediate, harsh <b>1.90-star penalty</b> on customer satisfaction scores, pulling otherwise healthy customer sentiment down drastically.
+- <b>Carrier Transit Bottlenecks:</b> While independent sellers are often blamed for fulfillment lag, the data isolates transit efficiency as the primary constraint. The national average for Seller Dispatch Delay stands at a lean <b>2.41 days</b> (beating the < 3-day target), whereas Average Carrier Transit Duration balloons to <b>8.74 days</b> (failing the < 7-day target).
+- <b>Volumetric Capacity Risk:</b> The Page 2 multi-variable scatter plot reveals a distinct positive correlation between physical package volume (cm<sup>3</sup>) and delivery duration across specific product categories, indicating capacity constraints inside standard shipping networks.
 
 ## Setup Instructions:
 1. Clone the repository.
-2. Copy .env.example to a new file named .env and fill in your local PostgreSQL credentials.
+2. Download dataset from <a href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce">Kaggle</a>
+3. Copy .env.example to a new file named .env and fill in your local PostgreSQL credentials.
 
 ## Project Overview:
-This enterprise-grade, 3-page Power BI dashboard analyzes logistics performance, identifies supply chain bottlenecks, and correlates delivery latencies directly with customer sentiment (review scores). Developed using a structured Star Schema and advanced analytical DAX modeling, this tool serves as a strategic and operational decision-making framework for e-commerce executive leadership.
+This enterprise-grade, 3-page Power BI dashboard analyzes logistics performance, identifies supply chain bottlenecks, and correlates delivery latencies directly with customer sentiment (review scores). Developed using a structured data model and advanced analytical DAX modeling, this tool serves as a strategic and operational decision-making framework for e-commerce executive leadership.
 
 ![Dashboard Page 1](images/dashboard_page1.png)
 
@@ -20,30 +21,28 @@ This enterprise-grade, 3-page Power BI dashboard analyzes logistics performance,
 
 ## The Business Problem:
 Logistics and fulfillment friction directly threaten brand retention and bottom-line revenue. However, businesses frequently treat supply chain metrics and customer experience feedback as isolated data silos.
-
-## The Goal: 
-Build an integrated analytics suite that quantifies how physical bottlenecks (processing delays, carrier transit times, product weight/volume dimensions) impact customer star ratings, and isolate high-risk regional routes and sellers.
+*   **The Goal:** Build an integrated analytics suite that quantifies *how* physical bottlenecks (processing delays, carrier transit times, product weight/volume dimensions) impact customer star ratings, and isolate high-risk regional routes and sellers.
 
 ## 3-Page Analytical Architecture:
 The dashboard is structured using a Top-Down (Macro-to-Micro) Analytical Framework:
 
 ### Page 1: Executive Sales & Delivery Performance Overview
-- Target Audience: C-Suite Executives & Regional Directors.
-- Core Focus: High-level macroeconomic health of the business. Includes revenue performance, monthly order volumes, and aggregate On-Time Delivery Rates (OTD%).
-- Key Design Highlight: Custom dynamic inline SVG sparklines built into the KPI cards to show historic metric trends directly inside the primary numeric containers.
+*   **Target Audience:** C-Suite Executives & Regional Directors.
+*   **Core Focus:** High-level macroeconomic health of the business. Includes revenue performance ($15.84M total), monthly order volumes (99K total), and aggregate On-Time Delivery Rates (94%).
+*   **Key Design Highlight:** Custom dynamic inline SVG sparklines built into the KPI cards to show historic metric trends directly inside the primary numeric containers.
 
 ### Page 2: Fulfillment Logistics & Supply Chain Bottleneck Diagnostics
-- Target Audience: Logistics Managers & Supply Chain Coordinators.
-- Core Focus: Isolating the physical phases of fulfillment latency.
-- Key Design Highlight: A custom chronological step-ladder milestone chart to track time spent at the seller’s warehouse vs. carrier transit, alongside a multi-variable scatter plot correlating physical package volume ($\text{cm}^3$) with delivery duration to pinpoint capacity strain.
+*   **Target Audience:** Logistics Managers & Supply Chain Coordinators.
+*   **Core Focus:** Isolating the physical phases of fulfillment latency.
+*   **Key Design Highlight:** A custom chronological milestone waterfall chart separating transit time from processing time, alongside a multi-variable scatter plot correlating physical package volume (cm<sup>3</sup>) with delivery duration to pinpoint capacity strain.
 
 ### Page 3: Customer Sentiment Impact & Operational Risk Analysis
-- Target Audience: Vendor Management & Customer Experience (CX) Teams.
-- Core Focus: Quantifying the direct impact of late deliveries on brand reputation.
-- Key Design Highlight: A dual-axis "Impact Curve" chart tracking delivery variance days against review scores, accompanied by a dynamic seller-level risk matrix to pinpoint exactly which vendors are driving down customer satisfaction.
+*   **Target Audience:** Vendor Management & Customer Experience (CX) Teams.
+*   **Core Focus:** Quantifying the direct impact of late deliveries on brand reputation.
+*   **Key Design Highlight:** An advanced integrated Area and Line chart combination tracking delivery variance days against review scores, accompanied by a dynamic seller-level risk matrix to pinpoint exactly which vendors are driving down customer satisfaction.
 
 ## Technical Highlights & DAX Engineering
-### Dynamic Inline SVG Sparklines (Page 1 Cards)
+### 1. Dynamic Inline SVG Sparklines (Page 1 Cards)
 To bypass the limitations of basic native card visuals, custom line vectors were drawn dynamically using DAX text-concatenation inside a virtualized date table. The image_tag output is categorized as an Image URL to render a high-performance vector trendline directly within the card background.
 
 ```
@@ -101,8 +100,8 @@ VAR SVGImageURL = "data:image/svg+xml;utf8," &
 RETURN SVGImageURL
 ```
 
-### Disconnected Milestone Table for Waterfall Flow (Page 2)
-To build a cumulative, multi-measure waterfall chart mapping independent logistics phases (Processing $\rightarrow$ Transit), a disconnected helper dimension was created. The measures are dynamically swapped in at query time using a SWITCH block:
+### 2. Disconnected Milestone Table for Waterfall Flow (Page 2)
+To build a cumulative, multi-measure waterfall chart mapping independent logistics phases (Transit $\rightarrow$ Processing), a disconnected helper dimension was created. The measures are dynamically swapped in at query time using a SWITCH block:
 
 ```
 waterfall_days = 
@@ -114,7 +113,7 @@ SWITCH(
 )
 ```
 
-### Customer Negative Review Rate (Page 3 Card)
+### 3. Customer Negative Review Rate (Page 3 Card)
 Calculates the exact ratio of active brand detractors (1 and 2-star reviews) using a robust, divide-by-zero-safe expression:
 
 ```
@@ -130,10 +129,10 @@ DIVIDE(
 ```
 
 ## Data Model & Design Choices
-- Star Schema Architecture: Highly optimized model consisting of clean dimensional layers (Sellers, Customers, Products, Geography, Calendar) surrounding central transactional fact tables.
+*   **Relational Database Engine:** Utilizing a full ETL pipeline where raw data was profiled and cleaned in <b>Python (Pandas)</b>, staged inside a <b>PostgreSQL</b> relational database with custom views, and subsequently imported into Power BI.
 
-- Cross-Filtering Integrity: A custom bidirectional bridging table (_Order_Bridge) was designed to resolve granularity mismatches, allowing users to slice sentiment metrics seamlessly across shipping lanes and transit nodes.
+*   **Cross-Page Filtering Integrity:** Structured via cross-view mapping layers to ensure that when a user interacts with the metrics on Page 2, the filters successfully sync across to the sentiment diagnostics on Page 3.
 
-- Professional UI/UX Design System:
-    - Canvas Layout: Soft off-white background (#F8F9FA) paired with rounded-corner container cards (#FFFFFF) to mimic a sleek, modern web application.
-    - Muted Color Semantics: Strict usage of high-contrast, low-saturation corporate tones. Red and orange color rules are locked exclusively to extreme risk parameters (e.g., severe delivery variance, negative review spikes) to optimize visual parsing speed.
+*   **Professional UI/UX Design System:**
+    *   **Canvas Layout:** Soft off-white background paired with rounded-corner container cards to mimic a sleek, modern web application.
+    *   **Muted Color Semantics:** Strict usage of high-contrast corporate tones. Red and green color rules are locked exclusively to extreme risk parameters (such as the severe -1.90 late order star penalty or carrier transit overruns) to optimize visual parsing speed.
